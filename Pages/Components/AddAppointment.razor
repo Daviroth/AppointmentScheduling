@@ -1,0 +1,66 @@
+﻿
+<!--I can't seem to get this working quite correctly, a reusable component is what I wanted to build, but in lieu of time I just built the component directly into the page -->
+
+@using AppointmentScheduling.Services
+@inject AppointmentService _appointmentService
+
+<div class="modal fade show" id="addAppointment" style="display:block; background-color: rgba(10,10,10,.8);"
+     aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Appointment Details</h4>
+                <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@appointment" OnSubmit="@Submit">
+                    <label for="appDate">Appointment Date</label>
+                    <InputDate id="appDate" class="form-control" @bind-Value="@appointment.Date"></InputDate>
+                    <label for="custName">Customer Name:</label>
+                    <InputText id="custName" class="form-control" @bind-Value="@appointment.Customer.Name" placeholder="Enter Customer name"></InputText>
+                    <label for="custNumber">Customer Phone Number:</label>
+                    <InputText id="custNumber" class="form-control" @bind-Value="@appointment.Customer.PhoneNumber" placeholder="Enter Customer phone number"></InputText>
+                    <label for="custEmail">Customer Email:</label>
+                    <InputText id="custEmail" class="form-control" @bind-Value="@appointment.Customer.EmailAddress" placeholder="Enter Customer email"></InputText>
+                    <label for="petName">Pet Name:</label>
+                    <InputText id="petName" class="form-control" @bind-Value="@appointment.Pet.Name" placeholder="Enter Pet name"></InputText>
+                    <label for="reason">Reason:</label>
+                    <InputText id="reason" class="form-control" @bind-Value="@appointment.Reason" placeholder="Enter reason"></InputText>
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" @onclick="@ModalOk">Save Appointment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<bool> OnClose { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    private Appointment appointment;
+
+    protected override void OnInitialized()
+    {
+        appointment = new Appointment();
+        base.OnInitialized();
+    }
+
+    private void Submit()
+    {
+        _appointmentService.ProcessNewAppointment(appointment);
+    }
+
+    private Task ModalCancel()
+    {
+        return OnClose.InvokeAsync(false);
+    }
+
+    private Task ModalOk()
+    {
+        return OnClose.InvokeAsync(true);
+    }
+}
