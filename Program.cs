@@ -1,4 +1,7 @@
 using AppointmentScheduling.Data;
+using AppointmentScheduling.Infrastructure;
+using AppointmentScheduling.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
@@ -8,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddDbContext<DatabaseContext>(options => options.UseSqlite("Data Source = AppointmentScheduling.db"));
+
+//Services
+builder.Services.AddScoped<AppointmentService>();
 
 var app = builder.Build();
 
