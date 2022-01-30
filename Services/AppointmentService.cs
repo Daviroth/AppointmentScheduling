@@ -66,5 +66,22 @@ namespace AppointmentScheduling.Services
             _context.Appointments.Add(newAppointment);
             _context.SaveChanges();
         }
+
+        public void DeleteAppointment(int appId)
+        {
+            Appointment app = _context.Appointments.SingleOrDefault(app => app.Id == appId);
+
+            _context.Appointments.Remove(app);
+            _context.SaveChanges();
+        }
+
+        public void UpdateAppointment(Appointment updatedAppointment)
+        {
+            Appointment app = _context.Appointments.SingleOrDefault(app => app.Id == updatedAppointment.Id);
+
+            app = updatedAppointment;
+
+            _context.SaveChanges();
+        }
     }
 }

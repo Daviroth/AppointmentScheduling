@@ -27,6 +27,7 @@
             Reason = string.Empty;
             Customer = new Customer();
             Pet = new Pet();
+            Date = DateTime.Now;
         }
 
         public Appointment(DateTime date, string reason, Customer customer, Pet pet)

@@ -7,7 +7,7 @@
 
 <h1>Appointments</h1>
 
-<button onclick="@OpenDialog">Add Appointment +</button>
+<button class="btn btn-primary" onclick="@OpenAddDialog">Add Appointment</button>
 
 <table class="table">
     <thead>
@@ -16,6 +16,8 @@
             <th>Customer</th>
             <th>Pet</th>
             <th>Reason</th>
+            <th>Delete Appointment</th>
+            <th>Update Appointment</th>
         </tr>
     </thead>
     <tbody>
@@ -26,12 +28,14 @@
                 <td>@app.Customer.Name</td>
                 <td>@app.Pet.Name</td>
                 <td>@app.Reason</td>
+                <td><button class="btn btn-danger" @onclick="() => DeleteAppointment(app.Id)"> X </button></td>
+                <td><button class="btn alert-secondary" @onclick="() => OpenUpdateDialog(app.Id)">Update</button></td>
             </tr>
         }
     </tbody>
 </table>
 
-@if(showDialog)
+@if(showAddDialog)
 {
     <div class="modal fade show" id="addAppointment" style="display:block; background-color: rgba(10,10,10,.8);"
      aria-modal="true" role="dialog">
@@ -39,12 +43,12 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">Appointment Details</h4>
-                <button type="button" class="close" @onclick="@DialogClose">&times;</button>
+                <button type="button" class="btn btn-danger" @onclick="@AddDialogClose">&times;</button>
             </div>
             <div class="modal-body">
-                <EditForm Model="@newAppointment" OnSubmit="@Submit">
+                <EditForm Model="@newAppointment">
                     <label for="appDate">Appointment Date</label>
-                    <InputDate id="appDate" class="form-control" @bind-Value="@newAppointment.Date"></InputDate>
+                    <InputDate id="appDate" class="form-control" min="@DateTime.Now.ToShortDateString()" @bind-Value="@newAppointment.Date"></InputDate>
                     <label for="custName">Customer Name:</label>
                     <InputText id="custName" class="form-control" @bind-Value="@newAppointment.Customer.Name" placeholder="Enter Customer name"></InputText>
                     <label for="custNumber">Customer Phone Number:</label>
@@ -58,7 +62,41 @@
                 </EditForm>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary" @onclick="@DialogClose">Save Appointment</button>
+                <button type="submit" class="btn btn-primary" @onclick="@SubmitAdd">Save Appointment</button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+@if(showUpdateDialog)
+{
+    <div class="modal fade show" id="addAppointment" style="display:block; background-color: rgba(10,10,10,.8);"
+     aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Appointment Details</h4>
+                <button type="button" class="btn btn-danger" @onclick="@UpdateDialogClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@updateAppointment">
+                    <label for="appDate">Appointment Date</label>
+                    <InputDate id="appDate" class="form-control" min="@DateTime.Now.ToShortDateString()" @bind-Value="@updateAppointment.Date"></InputDate>
+                    <label for="custName">Customer Name:</label>
+                    <InputText id="custName" class="form-control" @bind-Value="@updateAppointment.Customer.Name" placeholder="Enter Customer name"></InputText>
+                    <label for="custNumber">Customer Phone Number:</label>
+                    <InputText id="custNumber" class="form-control" @bind-Value="@updateAppointment.Customer.PhoneNumber" placeholder="Enter Customer phone number"></InputText>
+                    <label for="custEmail">Customer Email:</label>
+                    <InputText id="custEmail" class="form-control" @bind-Value="@updateAppointment.Customer.EmailAddress" placeholder="Enter Customer email"></InputText>
+                    <label for="petName">Pet Name:</label>
+                    <InputText id="petName" class="form-control" @bind-Value="@updateAppointment.Pet.Name" placeholder="Enter Pet name"></InputText>
+                    <label for="reason">Reason:</label>
+                    <InputText id="reason" class="form-control" @bind-Value="@updateAppointment.Reason" placeholder="Enter reason"></InputText>
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" @onclick="() => UpdateAppointment(updateAppointment)">Update Appointment</button>
             </div>
         </div>
     </div>
@@ -69,31 +107,61 @@
 @code {
     private List<Appointment> appointments;
     private Appointment newAppointment = new Appointment();
-    public bool showDialog { get; set; }
+    private Appointment updateAppointment;
+    public bool showAddDialog { get; set; }
+    public bool showUpdateDialog { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         appointments = AppointmentService.GetUpcomingAppointments().OrderBy(app => app.Date).ToList();
     }
 
-    private async Task DialogClose()
+    private async Task AddDialogClose()
     {
-        showDialog = false;
+        showAddDialog = false;
         StateHasChanged();
     }
 
-    private void OpenDialog()
+    private void OpenAddDialog()
     {
-        showDialog = true;
+        showAddDialog = true;
         StateHasChanged();
     }
 
-    private void Submit()
+    private async Task UpdateDialogClose()
+    {
+        showUpdateDialog = false;
+        StateHasChanged();
+    }
+
+    private void OpenUpdateDialog(int appId)
+    {
+        updateAppointment = appointments.SingleOrDefault(app => app.Id == appId);
+        showUpdateDialog = true;
+        StateHasChanged();
+    }
+
+    private void SubmitAdd()
     {
         logger.LogInformation($"Entered submit. {newAppointment.Customer.Name} and {newAppointment.Pet.Name}");
         AppointmentService.ProcessNewAppointment(newAppointment);
         appointments.Add(newAppointment);
         newAppointment = new Appointment();
+        AddDialogClose();
         StateHasChanged();
+    }
+
+    private void DeleteAppointment(int id)
+    {
+        AppointmentService.DeleteAppointment(id);
+        appointments.Remove(appointments.SingleOrDefault(app => app.Id == id));
+        StateHasChanged();
+    }
+
+    private void UpdateAppointment(Appointment update)
+    {
+        AppointmentService.UpdateAppointment(update);
+        StateHasChanged();
+        showUpdateDialog = false;
     }
 }
